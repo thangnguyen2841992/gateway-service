@@ -16,12 +16,16 @@ public class GatewayApplication {
 	}
 
 	@Bean
-	public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
-		return builder.routes()
+	public RouteLocator customRouteLocator(RouteLocatorBuilder builder, LoggingGatewayFilterFactory loggingGatewayFilterFactory) {
+		return builder.routes()// tao 1 rout moi co ten user-route, no se xu ly tat ca cac api co dang /user/**
+				// loai bo thanh phan dau cua duong dan vd /user/thang -> /thang
 				.route("user-route", r -> r.path("/user/**")
 						.filters(f -> f.stripPrefix(1)
+								.filter(loggingGatewayFilterFactory.apply(new LoggingGatewayFilterFactory.Config()))
 								.circuitBreaker(c -> c.setName("CircuitBreaker")
+										// neu duong dan chi dinh gap su co se dan den 1 url khac
 										.getFallbackUri()))
+						//Đây là URI mà API Gateway sẽ gửi yêu cầu đến. lb:// cho biết rằng đây là một dịch vụ được quản lý bởi Load Balancer. Dịch vụ này có tên là account-service.
 						.uri("lb://account-service"))
 				.route("report-route", r -> r.path("/report/**")
 						.filters(f -> f.stripPrefix(1))
